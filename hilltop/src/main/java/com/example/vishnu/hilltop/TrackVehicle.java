@@ -124,8 +124,8 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
             Location vehLoc = new Location("hilltop");
             vehLoc.setLongitude(lon);
             vehLoc.setLatitude(lat);
-            String time = getTime(vehLoc,myLocation);
-            eta.setText("ETA = "+time);
+            String dist = getDistance(vehLoc, myLocation);
+            eta.setText("Distance = " + dist);
         }
 
         private float getBearing(LatLng from, LatLng to) {
@@ -250,43 +250,24 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
                 4000, null);
     }
 
-    private String getTime(Location loc1, Location loc2) {
+    private String getDistance(Location loc1, Location loc2) {
         double lon1 = loc1.getLongitude();
         double lat1 = loc1.getLatitude();
         double lon2 = loc2.getLongitude();
         double lat2 = loc2.getLatitude();
-        double theta = lon1 - lon2;
-        String distance = getDistance(lat1,lon1,lat2,lon2).getDistance();
-        double dist = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.cos(deg2rad(theta));
-        dist = Math.acos(dist);
-        dist = rad2deg(dist);
-        dist = dist * 60 * 1.1515;
-        //not needed now
-        /*
-        if (unit == "K") {
-            dist = dist * 1.609344;
-        }
-        */
-        //assume 20mph
-        double vel = 20.0;
-        double mins = (dist/vel)*60;
-        if (mins <= 1) {
-            return "1 minute";
-        } else {
-            return (int)Math.ceil(mins)+" minutes";
-        }
-
+        String distance = googleDistanceApi(lat1,lon1,lat2,lon2).getDistance();
+        return distance;
     }
 
-    public Distance getDistance(final double lat1, final double lon1, final double lat2, final double lon2){
+    public Distance googleDistanceApi(final double lat1, final double lon1, final double lat2, final double lon2){
         final Distance parsedDistance = new Distance();
-
+        //no point for this thread, this has to be modified as a different thread that updates the distance from bg.s
         Thread thread=new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
 
-                    URL url = new URL("http://maps.googleapis.com/maps/api/directions/json?origin=" + lat1 + "," + lon1 + "&destination=" + lat2 + "," + lon2 + "&sensor=false&units=metric&mode=driving");
+                    URL url = new URL("http://maps.googleapis.com/maps/api/directions/json?origin=" + lat1 + "," + lon1 + "&destination=" + lat2 + "," + lon2 + "&sensor=false&units=imperial&mode=driving");
                     final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("POST");
                     InputStream in = new BufferedInputStream(conn.getInputStream());
