@@ -8,5 +8,6 @@
         running the sample again.</string>
     <string name="title_activity_locate">Locate</string>
     <string name="title_activity_track_vehicle">Map</string>
+    <string name="title_activity_test">Test</string>
 
 </resources>

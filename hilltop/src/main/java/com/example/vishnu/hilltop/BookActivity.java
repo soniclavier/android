@@ -1,6 +1,7 @@
 package com.example.vishnu.hilltop;
 
 import android.content.Context;
+import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -179,6 +180,12 @@ public class BookActivity extends AppCompatActivity {
                 }
             }
         });
+        Bundle b = getIntent().getExtras();
+        if (b!=null) {
+            Double latitude = b.getDouble("lat");
+            Double longitude = b.getDouble("lon");
+            getAddressFromLocation(latitude,longitude,getApplicationContext(),new UpdateFromLocHandler());
+        }
     }
 
     private class UpdateFromLocHandler extends Handler {
@@ -196,6 +203,12 @@ public class BookActivity extends AppCompatActivity {
             EditText fromLoc = (EditText) findViewById(R.id.fromLoc);
             fromLoc.setText(locationAddress);
         }
+    }
+
+    public void loadBookingStatus(View view) {
+        System.out.println("in loadBookingStatus");
+        Intent intent = new Intent(this,BookingStatus.class);
+        startActivity(intent);
     }
 
 

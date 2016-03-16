@@ -84,7 +84,7 @@
         android:text="Current Location"
         android:id="@+id/switchBook"
         android:textColor="@color/white"
-        android:checked="false"
+        android:checked="true"
         android:layout_marginLeft="17dp"
         android:layout_marginStart="17dp"
         android:layout_alignBaseline="@+id/fromLabel"
@@ -150,9 +150,22 @@
         android:layout_height="wrap_content"
         android:text="Book"
         android:id="@+id/bookButton"
-        android:layout_below="@+id/fromLoc"
-        android:layout_centerHorizontal="true"
         android:onClick="sendBookReqest"
-        android:layout_marginTop="35dp" />
+        android:layout_marginTop="34dp"
+        android:layout_below="@+id/fromLoc"
+        android:layout_alignLeft="@+id/fromLabel"
+        android:layout_alignStart="@+id/fromLabel" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Status"
+        android:id="@+id/status"
+        android:onClick="loadBookingStatus"
+        android:layout_alignBottom="@+id/bookButton"
+        android:layout_toRightOf="@+id/bookButton"
+        android:layout_toEndOf="@+id/bookButton"
+        android:layout_marginLeft="35dp"
+        android:layout_marginStart="35dp" />
 
 </RelativeLayout>

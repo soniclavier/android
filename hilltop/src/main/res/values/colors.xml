@@ -9,6 +9,12 @@
     <color name="marino">#446CB3</color>
     <color name="royalblue">#4183D7</color>
     <color name="steelblue">#4B77BE</color>
+    <color name="gossipGreen">#87D37C</color>
+    <color name="smokeGrey">#ECECEC</color>
+    <color name="lynch">#6C7A89</color>
+    <color name="brickred">#96281B</color>
+    <color name="darkgrey">#212121</color>
+
 
     <color name="black_overlay">#66000000</color>
 </resources>
