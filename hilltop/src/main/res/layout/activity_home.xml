@@ -14,17 +14,6 @@
         android:src="@drawable/home_bg"
         android:scaleType = "centerCrop" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Hilltop Finder"
-        android:id="@+id/textView"
-        android:layout_gravity="center_horizontal|top"
-        android:textColor="#F7CA18"
-        android:textSize="40dp"
-        android:layout_marginTop="20dp"
-        android:fontFamily="sans-serif-condensed"/>
 
     <Button
         android:id="@+id/login_button"

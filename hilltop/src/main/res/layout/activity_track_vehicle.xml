@@ -1,8 +1,51 @@
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:map="http://schemas.android.com/apk/res-auto"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/map"
-    android:name="com.google.android.gms.maps.SupportMapFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.vishnu.hilltop.TrackVehicle" />
+    tools:context="com.example.vishnu.hilltop.TrackVehicle" >
+
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:map="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="577dp"
+        tools:layout="@layout/abc_action_bar_title_item"
+        android:layout_gravity="center_horizontal|bottom" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:layout_gravity="center_horizontal|top">
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/etaLabel"
+            android:layout_gravity="center"
+            android:textSize="30px"
+            android:background="@null"
+            android:enabled="false"
+            android:textColor="@color/white"/>
+
+        <Switch
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Track"
+            android:id="@+id/track"
+            android:switchTextAppearance="@style/SwitchTextAppearance"
+            android:layout_gravity="right|center_vertical"
+            android:checked="true" />
+
+        <Spinner
+            android:layout_width="115dp"
+            android:layout_height="38dp"
+            android:id="@+id/chooseVehicle"
+            android:switchTextAppearance="@style/SwitchTextAppearance"
+            android:layout_gravity="left|center_vertical"
+            android:spinnerMode="dropdown"/>
+    </FrameLayout>
+
+</FrameLayout>

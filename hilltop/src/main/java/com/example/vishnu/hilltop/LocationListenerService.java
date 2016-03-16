@@ -35,6 +35,7 @@ public class LocationListenerService extends GcmListenerService{
             String parts[] = message.split(",");
             double lat = Double.parseDouble(parts[0]);
             double lon = Double.parseDouble(parts[1]);
+            float bearing = Float.parseFloat(parts[2]);
             Location targetLocation = new Location("");
             targetLocation.setLatitude(lat);
             targetLocation.setLongitude(lon);
@@ -43,6 +44,7 @@ public class LocationListenerService extends GcmListenerService{
             Intent intent = new Intent("LOCATION_UPDATE");
             intent.putExtra("lat",lat);
             intent.putExtra("lon",lon);
+            intent.putExtra("bearing",bearing);
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
 

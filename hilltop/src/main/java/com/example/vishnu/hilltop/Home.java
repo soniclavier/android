@@ -12,6 +12,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -26,6 +28,7 @@ public class Home extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
 
 
         mRegistrationBroadcastReceiver = new BroadcastReceiver() {
@@ -43,6 +46,8 @@ public class Home extends AppCompatActivity {
             }
         };
 
+
+
         if (checkPlayServices()) {
             // Start IntentService to register this application with GCM.
             Intent intent = new Intent(this, RegistrationIntentService.class);
@@ -51,6 +56,8 @@ public class Home extends AppCompatActivity {
 
 
     }
+
+
 
     public void login(View view)
     {
