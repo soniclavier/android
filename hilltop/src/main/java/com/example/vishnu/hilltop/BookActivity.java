@@ -70,22 +70,7 @@ public class BookActivity extends AppCompatActivity {
         mRequestQueue.add(req);
 
     }
-
-    class BookingSuccessListener implements Response.Listener<JSONObject> {
-
-        @Override
-        public void onResponse(JSONObject response) {
-            System.out.println("Response " + response.toString());
-        }
-    }
-
-    class BookingErrorListener implements Response.ErrorListener {
-
-        @Override
-        public void onErrorResponse(VolleyError error) {
-            System.out.println("Booking failed " + error);
-        }
-    }
+    
 
 
     @Override
