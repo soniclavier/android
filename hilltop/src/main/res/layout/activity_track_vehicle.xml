@@ -60,6 +60,7 @@
             android:background="@color/steelblue"
             android:textColor="@color/white"
             android:id="@+id/bookPage"
+            android:onClick="loadBooking"
             android:layout_gravity="center" />
     </FrameLayout>
 

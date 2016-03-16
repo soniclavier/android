@@ -255,7 +255,7 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
         double lat1 = loc1.getLatitude();
         double lon2 = loc2.getLongitude();
         double lat2 = loc2.getLatitude();
-        String distance = googleDistanceApi(lat1,lon1,lat2,lon2).getDistance();
+        String distance = googleDistanceApi(lat1, lon1, lat2, lon2).getDistance();
         return distance;
     }
 
@@ -308,6 +308,11 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
 
     private static double rad2deg(double rad) {
         return (rad * 180 / Math.PI);
+    }
+
+    public void loadBooking(View view) {
+        Intent intent = new Intent(TrackVehicle.this, BookActivity.class);
+        startActivity(intent);
     }
 
     class Distance {
