@@ -28,9 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class BookActivity extends AppCompatActivity {
-
-    BookingSuccessListener bookingSuccessListener = new BookingSuccessListener();
-    BookingErrorListener bookingErrorListener = new BookingErrorListener();
+    
     RequestQueue mRequestQueue;
     private boolean useCurrentLoc = true;
 
@@ -70,7 +68,7 @@ public class BookActivity extends AppCompatActivity {
         mRequestQueue.add(req);
 
     }
-    
+
 
 
     @Override
