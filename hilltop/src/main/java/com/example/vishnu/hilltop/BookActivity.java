@@ -1,8 +1,16 @@
 package com.example.vishnu.hilltop;
 
+import android.content.Context;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
@@ -21,29 +29,41 @@ import com.android.volley.toolbox.DiskBasedCache;
 import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.JsonObjectRequest;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class BookActivity extends AppCompatActivity {
-    
-    RequestQueue mRequestQueue;
-    private boolean useCurrentLoc = true;
 
+    RequestQueue mRequestQueue;
 
     public void sendBookReqest(View view) {
 
-
         String URL = "http://hilltop-bradleyuniv.rhcloud.com/rest/bookHilltop";
 
+        String name = ((EditText)findViewById(R.id.studentName)).getText().toString();
+        String buid = ((EditText)findViewById(R.id.bradleyID)).getText().toString();
+        String num = ((EditText)findViewById(R.id.numStudents)).getText().toString();
+        String to = ((EditText)findViewById(R.id.destination)).getText().toString();
+        String from = ((EditText)findViewById(R.id.fromLoc)).getText().toString();
         HashMap<String, String> params = new HashMap<String, String>();
-        params.put("name", "vishnu");
-        params.put("buid", "1");
-        params.put("num", "2");
-        params.put("to", "bradley");
-        params.put("from", "ayres");
+        params.put("name", name);
+        params.put("buid", buid);
+        params.put("num", num);
+        params.put("to", to);
+        params.put("from", from);
 
 
 
@@ -69,6 +89,53 @@ public class BookActivity extends AppCompatActivity {
 
     }
 
+    private static final String TAG = "LocationAddress";
+
+    public static void getAddressFromLocation(final double latitude, final double longitude,
+                                              final Context context, final Handler handler) {
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                Geocoder geocoder = new Geocoder(context, Locale.getDefault());
+                String result = null;
+                try {
+                    List<Address> addressList = geocoder.getFromLocation(
+                            latitude, longitude, 1);
+                    if (addressList != null && addressList.size() > 0) {
+                        Address address = addressList.get(0);
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < address.getMaxAddressLineIndex(); i++) {
+                            sb.append(address.getAddressLine(i)).append("\n");
+                        }
+                        //sb.append(address.getLocality()).append("\n");
+                        //sb.append(address.getPostalCode()).append("\n");
+                        //sb.append(address.getCountryName());
+                        result = sb.toString();
+                    }
+                } catch (IOException e) {
+                    Log.e(TAG, "Unable connect to Geocoder", e);
+                } finally {
+                    Message message = Message.obtain();
+                    message.setTarget(handler);
+                    if (result != null) {
+                        message.what = 1;
+                        Bundle bundle = new Bundle();
+                        bundle.putString("address", result);
+                        message.setData(bundle);
+                    } else {
+                        message.what = 1;
+                        Bundle bundle = new Bundle();
+                        result = "Unable to get address for this location";
+                        bundle.putString("address", result);
+                        message.setData(bundle);
+                    }
+                    message.sendToTarget();
+                }
+            }
+        };
+        thread.start();
+    }
+
 
 
     @Override
@@ -87,21 +154,48 @@ public class BookActivity extends AppCompatActivity {
         // Start the queue
         mRequestQueue.start();
 
+
+
         Switch takeCurrentLocation = (Switch) findViewById(R.id.switchBook);
         takeCurrentLocation.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                findViewById(R.id.bookButton).setEnabled(true);
                 EditText fromLoc = (EditText) findViewById(R.id.fromLoc);
                 if (isChecked) {
-                    useCurrentLoc = true;
                     fromLoc.setText("");
                     fromLoc.setEnabled(false);
+                    Bundle b = getIntent().getExtras();
+                    if (b!=null) {
+                        Double latitude = b.getDouble("lat");
+                        Double longitude = b.getDouble("lon");
+                        getAddressFromLocation(latitude,longitude,getApplicationContext(),new UpdateFromLocHandler());
+                    } else {
+                        fromLoc.setText("Could not retrieve your current location");
+                        findViewById(R.id.bookButton).setEnabled(false);
+                    }
                 } else {
-                    useCurrentLoc = false;
-
+                    fromLoc.setText("");
                     fromLoc.setEnabled(true);
                 }
             }
         });
+    }
+
+    private class UpdateFromLocHandler extends Handler {
+        @Override
+        public void handleMessage(Message message) {
+            String locationAddress;
+            switch (message.what) {
+                case 1:
+                    Bundle bundle = message.getData();
+                    locationAddress = bundle.getString("address");
+                    break;
+                default:
+                    locationAddress = null;
+            }
+            EditText fromLoc = (EditText) findViewById(R.id.fromLoc);
+            fromLoc.setText(locationAddress);
+        }
     }
 
 

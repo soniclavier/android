@@ -47,6 +47,13 @@ public class Home extends AppCompatActivity {
         };
 
 
+    }
+
+
+
+    public void login(View view)
+    {
+        //check credentials here
 
         if (checkPlayServices()) {
             // Start IntentService to register this application with GCM.
@@ -54,13 +61,6 @@ public class Home extends AppCompatActivity {
             startService(intent);
         }
 
-
-    }
-
-
-
-    public void login(View view)
-    {
         Intent intent = new Intent(Home.this, TrackVehicle.class);
         startActivity(intent);
     }

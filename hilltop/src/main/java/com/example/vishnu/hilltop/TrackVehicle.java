@@ -30,7 +30,10 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.google.android.gms.appindexing.Action;
@@ -45,6 +48,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
@@ -64,6 +68,9 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
     private String provider;
     private static final int REQUEST_FINE_LOC = 0;
     private TextView eta;
+    private Marker vehicleOne;
+    private Marker userLoc;
+    private boolean trackVehicle = false;
     Location myLocation;
 
     @Override
@@ -83,6 +90,16 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
         String[] items = new String[]{"Vehicle One", "Vehicle Two"};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.spinner_item, items);
         dropdown.setAdapter(adapter);
+        Switch trackVehicleSwitch = (Switch)findViewById(R.id.track);
+        trackVehicleSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    trackVehicle = true;
+                } else {
+                    trackVehicle = false;
+                }
+            }
+        });
     }
 
     private BroadcastReceiver locationReceiver = new BroadcastReceiver() {
@@ -94,30 +111,34 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
             float bearing = intent.getFloatExtra("bearing", 0.0f);
             LatLng location = new LatLng(lat, lon);
 
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 16));
-            mMap.clear();
+            //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 16));
+            if (vehicleOne != null)
+                vehicleOne.remove();
 
             //GroundOverlayOptions newarkMap = new GroundOverlayOptions()
             //        .image(BitmapDescriptorFactory.fromResource(R.drawable.directionarrow))
             //        .position(location,45f,45f);
             //mMap.addGroundOverlay(newarkMap);
 
-            mMap.addMarker(new MarkerOptions()
+
+            vehicleOne = mMap.addMarker(new MarkerOptions()
                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.directionarrow))
                     .anchor(0.5f, 0.5f)
                     .position(location)
                     .flat(true)
                     .rotation(bearing));
 
+            if (trackVehicle) {
+                CameraPosition cameraPosition = CameraPosition.builder()
+                        .target(location)
+                        .bearing(45)
+                        .zoom(16f)
+                        .build();
+                Log.d("receiver","tracking is on");
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition),
+                        4000, null);
+            }
 
-            CameraPosition cameraPosition = CameraPosition.builder()
-                    .target(location)
-                    .bearing(45)
-                    .zoom(16f)
-                    .build();
-
-            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition),
-                    4000, null);
             Log.d("receiver", "Got message: " + lat + "," + lon);
             previous = location;
             eta =(TextView)findViewById(R.id.etaLabel);
@@ -227,6 +248,16 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+
+    private Location getCurrentStudentLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return null;
+        }
+        myLocation = locationManager.getLastKnownLocation(provider);
+        return myLocation;
+
+    }
+
     private void moveToCurrentLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -237,9 +268,28 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
             myLocation.setLatitude(40.6981432);
             myLocation.setLongitude(-89.6182068);
         }
+        if (userLoc != null)
+            userLoc.remove();
         previous = new LatLng(myLocation.getLatitude(),myLocation.getLongitude());
         System.out.println("LAT LONG "+myLocation.getLatitude()+","+myLocation.getLongitude());
-        mMap.addMarker(new MarkerOptions().position(previous));
+        userLoc = mMap.addMarker(new MarkerOptions().draggable(true).position(previous));
+        mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+            @Override
+            public void onMarkerDragStart(Marker marker) {
+
+            }
+
+            @Override
+            public void onMarkerDrag(Marker marker) {
+
+            }
+
+            @Override
+            public void onMarkerDragEnd(Marker marker) {
+
+            }
+        });
+
         mMap.moveCamera(CameraUpdateFactory.newLatLng(previous));
         CameraPosition cameraPosition = CameraPosition.builder()
                 .target(previous)
@@ -311,7 +361,12 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void loadBooking(View view) {
+
         Intent intent = new Intent(TrackVehicle.this, BookActivity.class);
+        Bundle b = new Bundle();
+        b.putDouble("lat", userLoc.getPosition().latitude);
+        b.putDouble("lon", userLoc.getPosition().longitude);
+        intent.putExtras(b);
         startActivity(intent);
     }
 

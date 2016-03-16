@@ -37,7 +37,7 @@
             android:id="@+id/track"
             android:switchTextAppearance="@style/SwitchTextAppearance"
             android:layout_gravity="right|center_vertical"
-            android:checked="true" />
+            android:checked="false" />
 
         <Spinner
             android:layout_width="115dp"
