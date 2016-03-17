@@ -74,6 +74,8 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
     private Marker vehicleOne;
     private Marker userLoc;
     private boolean trackVehicle = false;
+    private long lastNotification = 0;
+    public String TRIP_FINISHED = "com.example.vishnu.hilltop.TrackVehicle$TripCompleteActionReceiver";
     Location myLocation;
     NotificationManager notificationManager;
 
@@ -160,19 +162,27 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
             eta.setText("Distance = " + dist);
             if (dist.contains("ft")) {
                 double feet = Double.parseDouble(dist.substring(0,dist.indexOf(" ")));
-                if (feet < 300) {
+                if (feet < 300 && (lastNotification==0 || (System.currentTimeMillis() - lastNotification > 60000)) ) {
+                    lastNotification = System.currentTimeMillis();
                     // use System.currentTimeMillis() to have a unique ID for the pending intent
                     Intent trackIntent = new Intent(context,TrackVehicle.class);
                     trackIntent.putExtras(intent.getExtras());
                     PendingIntent pIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), trackIntent, 0);
+                    Intent trackIntentComplete = new Intent(context,TrackVehicle.class);
+                    trackIntentComplete.setAction("complete");
+                    Intent tripIntent = new Intent(TRIP_FINISHED);
+                    tripIntent.setAction("TRIP_COMPLETE_ACTION");
+                    PendingIntent completeTripPendingIntent  = PendingIntent.getBroadcast(context, 0, tripIntent,0);
                     Notification n  = new Notification.Builder(context)
-                    .setContentTitle("Hilltop alert")
-                    .setContentText("Your vehicle is approaching")
-                    .setSmallIcon(R.drawable.ic_stat_ic_notification)
-                    .setContentIntent(pIntent)
-                    .setAutoCancel(true).build();
-                    notificationManager.notify(0,n);
-                }
+                        .setContentTitle("Hilltop alert")
+                        .setContentText("Your vehicle is approaching")
+                        .setSmallIcon(R.drawable.ic_stat_ic_notification)
+                        .setContentIntent(pIntent)
+                        .setAutoCancel(true)
+                        .addAction(R.drawable.ic_stat_ic_notification, "MARK TRIP AS COMPLETE", completeTripPendingIntent)
+                        .build();
+                notificationManager.notify(0,n);
+            }
             }
         }
 
@@ -275,6 +285,21 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    public static class TripCompleteActionReceiver extends BroadcastReceiver {
+
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String act = "TRIP_COMPLETE_ACTION";
+            System.out.println("on receive");
+            if(intent.getAction().equals(act)){
+                System.out.println("mark my earliest approved request complete");
+                ((NotificationManager)context.getSystemService(NOTIFICATION_SERVICE)).cancel(0);
+            }
+
+
+        }
+    }
 
     private Location getCurrentStudentLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
