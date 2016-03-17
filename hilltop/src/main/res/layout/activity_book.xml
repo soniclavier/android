@@ -15,22 +15,21 @@
         android:layout_height="wrap_content"
         android:text="Name :   "
         android:id="@+id/nameLabel"
-        android:layout_alignParentTop="true"
-        android:layout_alignRight="@+id/numStudLabel"
-        android:layout_alignEnd="@+id/numStudLabel"
-        android:layout_marginTop="37dp"
-        android:textColor="@color/white"/>
+        android:textColor="@color/white"
+        android:layout_above="@+id/numStudLabel"
+        android:layout_toLeftOf="@+id/studentName"
+        android:layout_toStartOf="@+id/studentName" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Number of Students :   "
         android:id="@+id/numStudLabel"
-        android:layout_marginTop="19dp"
-        android:layout_below="@+id/bradIDLabel"
+        android:textColor="@color/white"
+        android:layout_below="@+id/studentName"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:textColor="@color/white"/>
+        android:layout_marginTop="20dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -61,22 +60,11 @@
         android:textSize="20px"
         android:singleLine="true"
         android:textColor="@color/white"
-        android:layout_alignBaseline="@+id/nameLabel"
-        android:layout_alignBottom="@+id/nameLabel"
+        android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:layout_toEndOf="@+id/nameLabel"
-        />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Bradley ID :   "
-        android:id="@+id/bradIDLabel"
-        android:layout_below="@+id/studentName"
-        android:layout_alignRight="@+id/nameLabel"
-        android:layout_alignEnd="@+id/nameLabel"
-        android:textColor="@color/white"/>
+        android:layout_toRightOf="@+id/numStudLabel"
+        android:layout_toEndOf="@+id/numStudLabel" />
 
     <Switch
         android:layout_width="wrap_content"
@@ -85,26 +73,12 @@
         android:id="@+id/switchBook"
         android:textColor="@color/white"
         android:checked="true"
-        android:layout_marginLeft="17dp"
-        android:layout_marginStart="17dp"
         android:layout_alignBaseline="@+id/fromLabel"
         android:layout_alignBottom="@+id/fromLabel"
-        android:layout_alignLeft="@+id/studentName"
-        android:layout_alignStart="@+id/studentName"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
-
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/bradleyID"
-        android:textSize="20px"
-        android:singleLine="true"
-        android:textColor="@color/white"
-        android:layout_below="@+id/studentName"
-        android:layout_toRightOf="@+id/bradIDLabel"
-        android:layout_alignRight="@+id/studentName"
-        android:layout_alignEnd="@+id/studentName" />
+        android:layout_alignParentEnd="true"
+        android:layout_toRightOf="@+id/bookButton"
+        android:layout_toEndOf="@+id/bookButton" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -113,10 +87,10 @@
         android:textSize="20px"
         android:singleLine="true"
         android:textColor="@color/white"
-        android:layout_below="@+id/bradleyID"
+        android:layout_above="@+id/destLabel"
         android:layout_toRightOf="@+id/numStudLabel"
-        android:layout_alignRight="@+id/bradleyID"
-        android:layout_alignEnd="@+id/bradleyID" />
+        android:layout_alignRight="@+id/studentName"
+        android:layout_alignEnd="@+id/studentName" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -125,7 +99,7 @@
         android:textSize="20px"
         android:singleLine="true"
         android:textColor="@color/white"
-        android:layout_below="@+id/numStudents"
+        android:layout_above="@+id/fromLabel"
         android:layout_toRightOf="@+id/destLabel"
         android:layout_alignRight="@+id/numStudents"
         android:layout_alignEnd="@+id/numStudents" />
@@ -167,5 +141,20 @@
         android:layout_toEndOf="@+id/bookButton"
         android:layout_marginLeft="35dp"
         android:layout_marginStart="35dp" />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Call Hiltop Service"
+        android:id="@+id/callHilltop"
+        android:onClick="callHilltop"
+        android:background="@color/taxiyellow"
+        android:layout_marginBottom="21dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignRight="@+id/fromLoc"
+        android:layout_alignEnd="@+id/fromLoc" />
 
 </RelativeLayout>

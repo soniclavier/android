@@ -1,5 +1,7 @@
 package com.example.vishnu.hilltop;
 
+import android.content.IntentFilter;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -27,6 +29,7 @@ import org.json.JSONObject;
 public class BookingStatus extends AppCompatActivity {
 
     RequestQueue mRequestQueue;
+    String buid = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,8 +45,8 @@ public class BookingStatus extends AppCompatActivity {
 
         // Start the queue
         mRequestQueue.start();
-
-        retrieveBookings("123");
+        buid = getIntent().getStringExtra("buid");
+        retrieveBookings(buid);
     }
 
     public void retrieveBookings(String buid) {
@@ -73,6 +76,18 @@ public class BookingStatus extends AppCompatActivity {
 
         TableLayout layout = (TableLayout)findViewById(R.id.statusTableLayout);
         layout.removeAllViews();
+        TableRow header = new TableRow(this);
+        header.setBackgroundDrawable(getResources().getDrawable(R.drawable.headerrowborder));
+        header.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
+        TextView idHeader = new TextView(this);
+        idHeader.setText("Booking ID");
+        TextView statusHeader = new TextView(this);
+        statusHeader.setText("Status");
+        statusHeader.setTextColor(getResources().getColor(R.color.black));
+        idHeader.setTextColor(getResources().getColor(R.color.black));
+        header.addView(idHeader);
+        header.addView(statusHeader);
+        layout.addView(header);
         for(int i =0;i<status.length();i++) {
             TableRow row = null;
             JSONObject entry = null;
@@ -87,6 +102,8 @@ public class BookingStatus extends AppCompatActivity {
                 idCell.setTextColor(getResources().getColor(R.color.smokeGrey));
                 if (entry.getString("booking_status").equals("approved"))
                     statusCell.setTextColor(getResources().getColor(R.color.gossipGreen));
+                else if (entry.getString("booking_status").equals("rejected"))
+                    statusCell.setTextColor(getResources().getColor(R.color.brickred));
                 else
                     statusCell.setTextColor(getResources().getColor(R.color.smokeGrey));
                 idCell.setText(entry.getString("booking_id"));
@@ -101,7 +118,13 @@ public class BookingStatus extends AppCompatActivity {
     }
 
     public void refresh(View view) {
-        retrieveBookings("123");
+        retrieveBookings(buid);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        retrieveBookings(buid);
     }
 
 

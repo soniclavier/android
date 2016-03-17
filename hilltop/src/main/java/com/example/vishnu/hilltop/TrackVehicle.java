@@ -364,6 +364,7 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
 
         Intent intent = new Intent(TrackVehicle.this, BookActivity.class);
         Bundle b = new Bundle();
+        b.putString("buid",getIntent().getStringExtra("buid"));
         b.putDouble("lat", userLoc.getPosition().latitude);
         b.putDouble("lon", userLoc.getPosition().longitude);
         intent.putExtras(b);

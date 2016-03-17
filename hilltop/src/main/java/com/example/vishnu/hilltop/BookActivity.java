@@ -1,12 +1,20 @@
 package com.example.vishnu.hilltop;
 
+import android.Manifest;
+import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,6 +23,7 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
+import android.widget.TextView;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Cache;
@@ -49,44 +58,80 @@ import java.util.Map;
 public class BookActivity extends AppCompatActivity {
 
     RequestQueue mRequestQueue;
+    private final int MY_PERMISSIONS_REQUEST_CALL_PHONE = 0;
 
     public void sendBookReqest(View view) {
 
         String URL = "http://hilltop-bradleyuniv.rhcloud.com/rest/bookHilltop";
+        View focusView = null;
 
-        String name = ((EditText)findViewById(R.id.studentName)).getText().toString();
-        String buid = ((EditText)findViewById(R.id.bradleyID)).getText().toString();
-        String num = ((EditText)findViewById(R.id.numStudents)).getText().toString();
-        String to = ((EditText)findViewById(R.id.destination)).getText().toString();
-        String from = ((EditText)findViewById(R.id.fromLoc)).getText().toString();
-        HashMap<String, String> params = new HashMap<String, String>();
-        params.put("name", name);
-        params.put("buid", buid);
-        params.put("num", num);
-        params.put("to", to);
-        params.put("from", from);
+        EditText nameView = ((EditText) findViewById(R.id.studentName));
+        EditText numView = ((EditText) findViewById(R.id.numStudents));
+        EditText toView = ((EditText) findViewById(R.id.destination));
+        EditText fromView = ((EditText) findViewById(R.id.fromLoc));
+        String name = nameView.getText().toString();
+        String num = numView.getText().toString();
+        String to = toView.getText().toString();
+        String from = fromView.getText().toString();
+        if (name.trim().equals("")) {
+            nameView.setError(getString(R.string.error_field_required));
+            focusView = nameView;
+            focusView.requestFocus();
+        } else if (num.toString().equals("")) {
+            numView.setError(getString(R.string.error_field_required));
+            focusView = numView;
+            focusView.requestFocus();
+        } else if (to.trim().equals("")) {
+            toView.setError(getString(R.string.error_field_required));
+            focusView = toView;
+            focusView.requestFocus();
+        } else if (from.trim().equals("")) {
+            fromView.setError(getString(R.string.error_field_required));
+            focusView = fromView;
+            focusView.requestFocus();
+        } else {
+
+            try {
+                Integer.parseInt(num);
+                HashMap<String, String> params = new HashMap<String, String>();
+                String buid = getIntent().getStringExtra("buid");
+                params.put("name", name);
+                params.put("buid", buid);
+                params.put("num", num);
+                params.put("to", to);
+                params.put("from", from);
 
 
-
-        JsonObjectRequest req = new JsonObjectRequest(URL,new JSONObject(params),
-                new Response.Listener<JSONObject>() {
+                JsonObjectRequest req = new JsonObjectRequest(URL, new JSONObject(params),
+                        new Response.Listener<JSONObject>() {
+                            @Override
+                            public void onResponse(JSONObject response) {
+                                try {
+                                    VolleyLog.v("Response:%n %s", response.toString(4));
+                                    System.out.println("Success " + response);
+                                    String message = "Booking request sent";
+                                    message += "\nBooking ID : " + response.getString("booking_id");
+                                    message += "\nStatus : " + response.getString("approval_status");
+                                    openDialog(message, true);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }, new Response.ErrorListener() {
                     @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            VolleyLog.v("Response:%n %s", response.toString(4));
-                            System.out.println("Success "+response);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                    public void onErrorResponse(VolleyError error) {
+                        VolleyLog.e("Error: ", error.getMessage());
+                        openDialog("Could not send booking request\nPlease try again later", false);
                     }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                VolleyLog.e("Error: ", error.getMessage());
-            }
-        });
+                });
 
-        mRequestQueue.add(req);
+                mRequestQueue.add(req);
+            } catch (NumberFormatException e) {
+                numView.setError("Not a valid number");
+                focusView = numView;
+                focusView.requestFocus();
+            }
+        }
 
     }
 
@@ -138,7 +183,6 @@ public class BookActivity extends AppCompatActivity {
     }
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -156,7 +200,6 @@ public class BookActivity extends AppCompatActivity {
         mRequestQueue.start();
 
 
-
         Switch takeCurrentLocation = (Switch) findViewById(R.id.switchBook);
         takeCurrentLocation.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -166,10 +209,10 @@ public class BookActivity extends AppCompatActivity {
                     fromLoc.setText("");
                     fromLoc.setEnabled(false);
                     Bundle b = getIntent().getExtras();
-                    if (b!=null) {
+                    if (b != null) {
                         Double latitude = b.getDouble("lat");
                         Double longitude = b.getDouble("lon");
-                        getAddressFromLocation(latitude,longitude,getApplicationContext(),new UpdateFromLocHandler());
+                        getAddressFromLocation(latitude, longitude, getApplicationContext(), new UpdateFromLocHandler());
                     } else {
                         fromLoc.setText("Could not retrieve your current location");
                         findViewById(R.id.bookButton).setEnabled(false);
@@ -181,10 +224,10 @@ public class BookActivity extends AppCompatActivity {
             }
         });
         Bundle b = getIntent().getExtras();
-        if (b!=null) {
+        if (b != null) {
             Double latitude = b.getDouble("lat");
             Double longitude = b.getDouble("lon");
-            getAddressFromLocation(latitude,longitude,getApplicationContext(),new UpdateFromLocHandler());
+            getAddressFromLocation(latitude, longitude, getApplicationContext(), new UpdateFromLocHandler());
         }
     }
 
@@ -206,9 +249,62 @@ public class BookActivity extends AppCompatActivity {
     }
 
     public void loadBookingStatus(View view) {
-        System.out.println("in loadBookingStatus");
-        Intent intent = new Intent(this,BookingStatus.class);
+        Bundle b = getIntent().getExtras();
+        Intent intent = new Intent(this, BookingStatus.class);
+        intent.putExtras(b);
         startActivity(intent);
+    }
+
+    public void openDialog(String message, final boolean success) {
+        final Dialog dialog = new Dialog(this); // Context, this, etc.
+        dialog.setContentView(R.layout.bookingresult);
+        dialog.setTitle("Booking response");
+        TextView dialogText = (TextView) dialog.findViewById(R.id.dialog_info);
+        dialogText.setText(message);
+        if (success) {
+            ((Button) dialog.findViewById(R.id.dialog_ok)).setBackgroundColor(getResources().getColor(R.color.gossipGreen));
+        } else {
+            ((Button) dialog.findViewById(R.id.dialog_ok)).setBackgroundColor(getResources().getColor(R.color.grey));
+        }
+        dialog.findViewById(R.id.dialog_ok).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (success) {
+                    Bundle b = getIntent().getExtras();
+                    Intent intent = new Intent(getBaseContext(), BookingStatus.class);
+                    intent.putExtras(b);
+                    startActivity(intent);
+                } else {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        dialog.findViewById(R.id.dialog_cancel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+    }
+
+    public void callHilltop(View view) {
+        Intent callIntent = new Intent(Intent.ACTION_CALL);
+        callIntent.setData(Uri.parse("tel:+13096772800"));
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CALL_PHONE},
+                    MY_PERMISSIONS_REQUEST_CALL_PHONE);
+            return;
+        }
+        startActivity(callIntent);
     }
 
 

@@ -19,6 +19,8 @@
     -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
+
+    <uses-permission android:name="android.permission.CALL_PHONE"></uses-permission>
     <!-- [END gcm_permission] -->
     <application
         android:allowBackup="true"
@@ -100,7 +102,10 @@
         <activity
             android:name=".Test"
             android:label="@string/title_activity_test"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".StudentLogin"
+            android:label="@string/title_activity_student_login"></activity>
     </application>
 
 </manifest>
