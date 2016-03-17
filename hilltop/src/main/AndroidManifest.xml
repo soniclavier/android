@@ -87,7 +87,8 @@
 
         <activity
             android:name=".TrackVehicle"
-            android:label="@string/title_activity_track_vehicle" />
+            android:label="@string/title_activity_track_vehicle"
+            android:launchMode="singleInstance"/>
         <!--
              ATTENTION: This was auto-generated to add Google Play services to your project for
              App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -99,10 +100,6 @@
 
         <activity android:name=".BookActivity" />
         <activity android:name=".BookingStatus" />
-        <activity
-            android:name=".Test"
-            android:label="@string/title_activity_test"
-            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".StudentLogin"
             android:label="@string/title_activity_student_login"></activity>

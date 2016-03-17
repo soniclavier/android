@@ -12,6 +12,9 @@ import java.net.URL;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -72,6 +75,7 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
     private Marker userLoc;
     private boolean trackVehicle = false;
     Location myLocation;
+    NotificationManager notificationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +104,13 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
                 }
             }
         });
+
+        //need for user clicking notification
+        if (vehicleOne != null) {
+
+        }
+        notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
     }
 
     private BroadcastReceiver locationReceiver = new BroadcastReceiver() {
@@ -134,7 +145,7 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
                         .bearing(45)
                         .zoom(16f)
                         .build();
-                Log.d("receiver","tracking is on");
+                Log.d("receiver", "tracking is on");
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition),
                         4000, null);
             }
@@ -147,6 +158,22 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
             vehLoc.setLatitude(lat);
             String dist = getDistance(vehLoc, myLocation);
             eta.setText("Distance = " + dist);
+            if (dist.contains("ft")) {
+                double feet = Double.parseDouble(dist.substring(0,dist.indexOf(" ")));
+                if (feet < 300) {
+                    // use System.currentTimeMillis() to have a unique ID for the pending intent
+                    Intent trackIntent = new Intent(context,TrackVehicle.class);
+                    trackIntent.putExtras(intent.getExtras());
+                    PendingIntent pIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), trackIntent, 0);
+                    Notification n  = new Notification.Builder(context)
+                    .setContentTitle("Hilltop alert")
+                    .setContentText("Your vehicle is approaching")
+                    .setSmallIcon(R.drawable.ic_stat_ic_notification)
+                    .setContentIntent(pIntent)
+                    .setAutoCancel(true).build();
+                    notificationManager.notify(0,n);
+                }
+            }
         }
 
         private float getBearing(LatLng from, LatLng to) {
