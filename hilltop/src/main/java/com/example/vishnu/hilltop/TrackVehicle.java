@@ -75,9 +75,11 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
     private Marker userLoc;
     private boolean trackVehicle = false;
     private long lastNotification = 0;
+    private String buid;
     public String TRIP_FINISHED = "com.example.vishnu.hilltop.TrackVehicle$TripCompleteActionReceiver";
     Location myLocation;
     NotificationManager notificationManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,6 +114,7 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
 
         }
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        buid = getIntent().getStringExtra("buid");
 
     }
 
@@ -160,7 +163,8 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
             vehLoc.setLatitude(lat);
             String dist = getDistance(vehLoc, myLocation);
             eta.setText("Distance = " + dist);
-            if (dist.contains("ft")) {
+            boolean pendingRide = checkPendingRide(buid);
+            if (dist.contains("ft") && pendingRide) {
                 double feet = Double.parseDouble(dist.substring(0,dist.indexOf(" ")));
                 if (feet < 300 && (lastNotification==0 || (System.currentTimeMillis() - lastNotification > 60000)) ) {
                     lastNotification = System.currentTimeMillis();
@@ -401,6 +405,10 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
             e.printStackTrace();
         }
         return parsedDistance;
+    }
+
+    public boolean checkPendingRide(String id) {
+        return true;
     }
 
 
