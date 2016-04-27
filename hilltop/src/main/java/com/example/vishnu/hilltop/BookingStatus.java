@@ -1,6 +1,9 @@
 package com.example.vishnu.hilltop;
 
+import android.content.Context;
 import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,6 +12,7 @@ import android.widget.AbsListView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Cache;
 import com.android.volley.Network;
@@ -47,6 +51,11 @@ public class BookingStatus extends AppCompatActivity {
         mRequestQueue.start();
         buid = getIntent().getStringExtra("buid");
         retrieveBookings(buid);
+
+        if (!isNetworkAvailable()) {
+            Toast toast = Toast.makeText(this,"Please check your internet connectivity",Toast.LENGTH_LONG);
+            toast.show();
+        }
     }
 
     public void retrieveBookings(String buid) {
@@ -127,6 +136,11 @@ public class BookingStatus extends AppCompatActivity {
         retrieveBookings(buid);
     }
 
-
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
 
 }

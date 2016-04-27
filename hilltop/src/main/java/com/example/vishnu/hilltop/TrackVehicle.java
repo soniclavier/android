@@ -38,7 +38,19 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.Cache;
+import com.android.volley.Network;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.BasicNetwork;
+import com.android.volley.toolbox.DiskBasedCache;
+import com.android.volley.toolbox.HurlStack;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -67,6 +79,7 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
      */
     private GoogleApiClient client;
     private LatLng previous;
+    private float oldBearing;
     private LocationManager locationManager;
     private String provider;
     private static final int REQUEST_FINE_LOC = 0;
@@ -75,10 +88,13 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
     private Marker userLoc;
     private boolean trackVehicle = false;
     private long lastNotification = 0;
-    private String buid;
+    private static String buid;
     public String TRIP_FINISHED = "com.example.vishnu.hilltop.TrackVehicle$TripCompleteActionReceiver";
+    private final String BUID = "buid";
     Location myLocation;
     NotificationManager notificationManager;
+    static RequestQueue mRequestQueue;
+    Boolean pending = false;
 
 
     @Override
@@ -114,7 +130,18 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
 
         }
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        buid = getIntent().getStringExtra("buid");
+        buid = getIntent().getStringExtra(BUID);
+
+        Cache cache = new DiskBasedCache(getCacheDir(), 1024 * 1024); // 1MB cap
+
+        // Set up the network to use HttpURLConnection as the HTTP client.
+        Network network = new BasicNetwork(new HurlStack());
+
+        // Instantiate the RequestQueue with the cache and network.
+        mRequestQueue = new RequestQueue(cache, network);
+
+        // Start the queue
+        mRequestQueue.start();
 
     }
 
@@ -125,24 +152,83 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
             double lat = intent.getDoubleExtra("lat", 0.0);
             double lon = intent.getDoubleExtra("lon", 0.0);
             float bearing = intent.getFloatExtra("bearing", 0.0f);
+
+
             LatLng location = new LatLng(lat, lon);
 
             //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 16));
-            if (vehicleOne != null)
-                vehicleOne.remove();
+
 
             //GroundOverlayOptions newarkMap = new GroundOverlayOptions()
             //        .image(BitmapDescriptorFactory.fromResource(R.drawable.directionarrow))
             //        .position(location,45f,45f);
             //mMap.addGroundOverlay(newarkMap);
+            Log.d("receiver", "Got message: " + lat + "," + lon);
+            float[] distInfo = new float[3];
+            Location.distanceBetween(previous.latitude, previous.longitude, location.latitude, location.longitude, distInfo);
+            if (previous != null) {
+                if (distInfo[0] < 10) {
+                    //keep old bearing
+                    bearing = oldBearing;
 
+                }
+            }
+            oldBearing = bearing;
 
-            vehicleOne = mMap.addMarker(new MarkerOptions()
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.directionarrow))
-                    .anchor(0.5f, 0.5f)
-                    .position(location)
-                    .flat(true)
-                    .rotation(bearing));
+            eta =(TextView)findViewById(R.id.etaLabel);
+            Location vehLoc = new Location("hilltop");
+            vehLoc.setLongitude(lon);
+            vehLoc.setLatitude(lat);
+            Location markerLocation = new Location("markerLocation");
+            markerLocation.setLatitude(userLoc.getPosition().latitude);
+            markerLocation.setLongitude(userLoc.getPosition().longitude);
+            String dist = getDistance(vehLoc, markerLocation);
+            eta.setText("Distance = " + dist);
+            checkPendingRide(buid);
+
+            if (dist != null && dist.contains("ft") && pending) {
+                double feet = Double.parseDouble(dist.substring(0,dist.indexOf(" ")));
+                if (feet < 300 && (lastNotification==0 || (System.currentTimeMillis() - lastNotification > 0)) ) {
+                    lastNotification = System.currentTimeMillis();
+                    // use System.currentTimeMillis() to have a unique ID for the pending intent
+                    Intent trackIntent = new Intent(context,TrackVehicle.class);
+                    trackIntent.putExtras(intent.getExtras());
+                    trackIntent.putExtra(BUID,buid);
+                    PendingIntent pIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), trackIntent, 0);
+                    Intent trackIntentComplete = new Intent(context,TrackVehicle.class);
+                    trackIntentComplete.setAction("complete");
+                    Intent tripIntent = new Intent(TRIP_FINISHED);
+                    tripIntent.setAction("TRIP_COMPLETE_ACTION");
+                    PendingIntent completeTripPendingIntent  = PendingIntent.getBroadcast(context, 0, tripIntent,0);
+                    Notification n  = new Notification.Builder(context)
+                            .setContentTitle("Hilltop alert")
+                            .setContentText("Your vehicle is approaching")
+                            .setSmallIcon(R.drawable.ic_stat_ic_notification)
+                            .setContentIntent(pIntent)
+                            .setAutoCancel(true)
+                            .addAction(R.drawable.ic_stat_ic_notification, "MARK TRIP AS COMPLETE", completeTripPendingIntent)
+                            .build();
+                    notificationManager.notify(0,n);
+                }
+            } else {
+                System.out.println("Not displaying alert");
+                System.out.println("dist = "+dist);
+                System.out.println("pending = "+pending);
+            }
+
+            System.out.println(distInfo[0]);
+            if (vehicleOne == null || distInfo[0] > 0) {
+                if (vehicleOne != null)
+                    vehicleOne.remove();
+                System.out.println("updating marker");
+                vehicleOne = mMap.addMarker(new MarkerOptions()
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.directionarrow))
+                        .anchor(0.5f, 0.5f)
+                        .position(location)
+                        .flat(true)
+                        .rotation(bearing));
+                previous = location;
+            }
 
             if (trackVehicle) {
                 CameraPosition cameraPosition = CameraPosition.builder()
@@ -155,39 +241,7 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
                         4000, null);
             }
 
-            Log.d("receiver", "Got message: " + lat + "," + lon);
-            previous = location;
-            eta =(TextView)findViewById(R.id.etaLabel);
-            Location vehLoc = new Location("hilltop");
-            vehLoc.setLongitude(lon);
-            vehLoc.setLatitude(lat);
-            String dist = getDistance(vehLoc, myLocation);
-            eta.setText("Distance = " + dist);
-            boolean pendingRide = checkPendingRide(buid);
-            if (dist.contains("ft") && pendingRide) {
-                double feet = Double.parseDouble(dist.substring(0,dist.indexOf(" ")));
-                if (feet < 300 && (lastNotification==0 || (System.currentTimeMillis() - lastNotification > 60000)) ) {
-                    lastNotification = System.currentTimeMillis();
-                    // use System.currentTimeMillis() to have a unique ID for the pending intent
-                    Intent trackIntent = new Intent(context,TrackVehicle.class);
-                    trackIntent.putExtras(intent.getExtras());
-                    PendingIntent pIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), trackIntent, 0);
-                    Intent trackIntentComplete = new Intent(context,TrackVehicle.class);
-                    trackIntentComplete.setAction("complete");
-                    Intent tripIntent = new Intent(TRIP_FINISHED);
-                    tripIntent.setAction("TRIP_COMPLETE_ACTION");
-                    PendingIntent completeTripPendingIntent  = PendingIntent.getBroadcast(context, 0, tripIntent,0);
-                    Notification n  = new Notification.Builder(context)
-                        .setContentTitle("Hilltop alert")
-                        .setContentText("Your vehicle is approaching")
-                        .setSmallIcon(R.drawable.ic_stat_ic_notification)
-                        .setContentIntent(pIntent)
-                        .setAutoCancel(true)
-                        .addAction(R.drawable.ic_stat_ic_notification, "MARK TRIP AS COMPLETE", completeTripPendingIntent)
-                        .build();
-                notificationManager.notify(0,n);
-            }
-            }
+
         }
 
         private float getBearing(LatLng from, LatLng to) {
@@ -298,6 +352,25 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
             System.out.println("on receive");
             if(intent.getAction().equals(act)){
                 System.out.println("mark my earliest approved request complete");
+                String URL = "http://hilltop-bradleyuniv.rhcloud.com/rest/markTripComplete/"+buid;
+
+                JsonObjectRequest req = new JsonObjectRequest(URL, new Response.Listener<JSONObject> () {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            VolleyLog.v("Response:%n %s", response.toString(4));
+                            Log.i("MarkTripComplete",response.getString("status"));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        VolleyLog.e("Error: ", error.getMessage());
+                    }
+                });
+                mRequestQueue.add(req);
                 ((NotificationManager)context.getSystemService(NOTIFICATION_SERVICE)).cancel(0);
             }
 
@@ -320,6 +393,8 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
         }
         myLocation = locationManager.getLastKnownLocation(provider);
         if (myLocation == null) {
+            Toast toast = Toast.makeText(this,"Could not get your location, defaulting to Bradley Univeristy location",Toast.LENGTH_LONG);
+            toast.show();
             myLocation = new Location("bradley");
             myLocation.setLatitude(40.6981432);
             myLocation.setLongitude(-89.6182068);
@@ -407,8 +482,26 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
         return parsedDistance;
     }
 
-    public boolean checkPendingRide(String id) {
-        return true;
+    public void checkPendingRide(String id) {
+        String URL = "http://hilltop-bradleyuniv.rhcloud.com/rest/checkPending/"+id;
+
+        JsonObjectRequest req = new JsonObjectRequest(URL, new Response.Listener<JSONObject> () {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    VolleyLog.v("Response:%n %s", response.toString(4));
+                    pending = Boolean.parseBoolean(response.getString("pending"));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.e("Error: ", error.getMessage());
+            }
+        });
+        mRequestQueue.add(req);
     }
 
 
@@ -424,7 +517,7 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
 
         Intent intent = new Intent(TrackVehicle.this, BookActivity.class);
         Bundle b = new Bundle();
-        b.putString("buid",getIntent().getStringExtra("buid"));
+        b.putString(BUID,getIntent().getStringExtra("buid"));
         b.putDouble("lat", userLoc.getPosition().latitude);
         b.putDouble("lon", userLoc.getPosition().longitude);
         intent.putExtras(b);

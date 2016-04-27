@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -36,6 +38,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -79,6 +82,7 @@ public class StudentLogin extends AppCompatActivity {
             }
         });
 
+
         Button login = (Button) findViewById(R.id.login);
         login.setOnClickListener(new OnClickListener() {
             @Override
@@ -109,6 +113,12 @@ public class StudentLogin extends AppCompatActivity {
 
     private void attemptLogin() {
 
+
+        if (!isNetworkAvailable()) {
+            Toast toast = Toast.makeText(this,"Please check your internet connectivity",Toast.LENGTH_LONG);
+            toast.show();
+            return;
+        }
         // Reset errors.
         this.buid.setError(null);
         mPasswordView.setError(null);
@@ -142,7 +152,7 @@ public class StudentLogin extends AppCompatActivity {
 
 
             //check credentials here
-            if (buid.equals("258") && password.equals("a")) {
+            if (buid.equals("258318") && password.equals("vishnu")) {
                 if (checkPlayServices()) {
                     // Start IntentService to register this application with GCM.
                     Intent intent = new Intent(this, RegistrationIntentService.class);
@@ -192,6 +202,13 @@ public class StudentLogin extends AppCompatActivity {
     protected void onPause() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mRegistrationBroadcastReceiver);
         super.onPause();
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 }
 

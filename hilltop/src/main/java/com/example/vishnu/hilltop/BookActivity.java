@@ -10,6 +10,8 @@ import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
@@ -24,6 +26,7 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Cache;
@@ -171,7 +174,7 @@ public class BookActivity extends AppCompatActivity {
                     } else {
                         message.what = 1;
                         Bundle bundle = new Bundle();
-                        result = "Unable to get address for this location";
+                        result = latitude+","+longitude;
                         bundle.putString("address", result);
                         message.setData(bundle);
                     }
@@ -199,6 +202,10 @@ public class BookActivity extends AppCompatActivity {
         // Start the queue
         mRequestQueue.start();
 
+        if (!isNetworkAvailable()) {
+            Toast toast = Toast.makeText(this,"Please check your internet connectivity",Toast.LENGTH_LONG);
+            toast.show();
+        }
 
         Switch takeCurrentLocation = (Switch) findViewById(R.id.switchBook);
         takeCurrentLocation.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -212,7 +219,10 @@ public class BookActivity extends AppCompatActivity {
                     if (b != null) {
                         Double latitude = b.getDouble("lat");
                         Double longitude = b.getDouble("lon");
-                        getAddressFromLocation(latitude, longitude, getApplicationContext(), new UpdateFromLocHandler());
+                        if (isNetworkAvailable())
+                            getAddressFromLocation(latitude, longitude, getApplicationContext(), new UpdateFromLocHandler());
+                        else
+                            fromLoc.setText(latitude+","+longitude);
                     } else {
                         fromLoc.setText("Could not retrieve your current location");
                         findViewById(R.id.bookButton).setEnabled(false);
@@ -307,5 +317,10 @@ public class BookActivity extends AppCompatActivity {
         startActivity(callIntent);
     }
 
-
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
 }
