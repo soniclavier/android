@@ -1,15 +1,12 @@
 package com.example.vishnu.hilltop;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
-import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -17,7 +14,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
@@ -30,10 +26,8 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.Cache;
 import com.android.volley.Network;
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -44,27 +38,20 @@ import com.android.volley.toolbox.DiskBasedCache;
 import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.JsonObjectRequest;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class BookActivity extends AppCompatActivity {
 
     RequestQueue mRequestQueue;
     private final int MY_PERMISSIONS_REQUEST_CALL_PHONE = 0;
     private final int MY_READ_PHONE_STATE = 1;
+    private String phoneNumber = "Unknown";
 
     public void sendBookReqest(View view) {
 
@@ -245,7 +232,7 @@ public class BookActivity extends AppCompatActivity {
 
 
         if (checkPhoneStatePermission()) {
-           printPhoneNumber();
+           getPhoneNumber();
         }
     }
 
@@ -371,7 +358,7 @@ public class BookActivity extends AppCompatActivity {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                    printPhoneNumber();
+                    getPhoneNumber();
 
                 } else {
                     System.out.println("exit the app here?");
@@ -386,9 +373,10 @@ public class BookActivity extends AppCompatActivity {
         }
     }
 
-    public void printPhoneNumber() {
+    public void getPhoneNumber() {
         TelephonyManager tMgr = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
         String mPhoneNumber = tMgr.getLine1Number();
-        System.out.println(mPhoneNumber);
+        if (mPhoneNumber != null && !mPhoneNumber.trim().equals("") && !mPhoneNumber.contains("?"))
+            phoneNumber =  mPhoneNumber;
     }
 }
