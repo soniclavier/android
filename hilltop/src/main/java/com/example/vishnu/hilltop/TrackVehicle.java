@@ -273,6 +273,7 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
         provider = locationManager.getBestProvider(criteria, false);
+        System.out.println("provider is " + provider);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},REQUEST_FINE_LOC);
@@ -391,7 +392,13 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
-        myLocation = locationManager.getLastKnownLocation(provider);
+        if (provider == null) {
+            //try to get GPS location provider
+            provider = LocationManager.GPS_PROVIDER;
+            System.out.println("proivder after "+provider);
+        }
+        if (provider != null)
+            myLocation = locationManager.getLastKnownLocation(provider);
         if (myLocation == null) {
             Toast toast = Toast.makeText(this,"Could not get your location, defaulting to Bradley Univeristy location",Toast.LENGTH_LONG);
             toast.show();
