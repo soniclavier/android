@@ -22,6 +22,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Handler;
@@ -70,7 +71,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback {
+public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback, LocationListener {
 
     private GoogleMap mMap;
     /**
@@ -114,7 +115,7 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
         String[] items = new String[]{"Vehicle One", "Vehicle Two"};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.spinner_item, items);
         dropdown.setAdapter(adapter);
-        Switch trackVehicleSwitch = (Switch)findViewById(R.id.track);
+        Switch trackVehicleSwitch = (Switch) findViewById(R.id.track);
         trackVehicleSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
@@ -165,8 +166,8 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
             //mMap.addGroundOverlay(newarkMap);
             Log.d("receiver", "Got message: " + lat + "," + lon);
             float[] distInfo = new float[3];
-            Location.distanceBetween(previous.latitude, previous.longitude, location.latitude, location.longitude, distInfo);
             if (previous != null) {
+                Location.distanceBetween(previous.latitude, previous.longitude, location.latitude, location.longitude, distInfo);
                 if (distInfo[0] < 10) {
                     //keep old bearing
                     bearing = oldBearing;
@@ -175,7 +176,7 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
             }
             oldBearing = bearing;
 
-            eta =(TextView)findViewById(R.id.etaLabel);
+            eta = (TextView) findViewById(R.id.etaLabel);
             Location vehLoc = new Location("hilltop");
             vehLoc.setLongitude(lon);
             vehLoc.setLatitude(lat);
@@ -187,20 +188,20 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
             checkPendingRide(buid);
 
             if (dist != null && dist.contains("ft") && pending) {
-                double feet = Double.parseDouble(dist.substring(0,dist.indexOf(" ")));
-                if (feet < 300 && (lastNotification==0 || (System.currentTimeMillis() - lastNotification > 0)) ) {
+                double feet = Double.parseDouble(dist.substring(0, dist.indexOf(" ")));
+                if (feet < 300 && (lastNotification == 0 || (System.currentTimeMillis() - lastNotification > 0))) {
                     lastNotification = System.currentTimeMillis();
                     // use System.currentTimeMillis() to have a unique ID for the pending intent
-                    Intent trackIntent = new Intent(context,TrackVehicle.class);
+                    Intent trackIntent = new Intent(context, TrackVehicle.class);
                     trackIntent.putExtras(intent.getExtras());
-                    trackIntent.putExtra(BUID,buid);
+                    trackIntent.putExtra(BUID, buid);
                     PendingIntent pIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), trackIntent, 0);
-                    Intent trackIntentComplete = new Intent(context,TrackVehicle.class);
+                    Intent trackIntentComplete = new Intent(context, TrackVehicle.class);
                     trackIntentComplete.setAction("complete");
                     Intent tripIntent = new Intent(TRIP_FINISHED);
                     tripIntent.setAction("TRIP_COMPLETE_ACTION");
-                    PendingIntent completeTripPendingIntent  = PendingIntent.getBroadcast(context, 0, tripIntent,0);
-                    Notification n  = new Notification.Builder(context)
+                    PendingIntent completeTripPendingIntent = PendingIntent.getBroadcast(context, 0, tripIntent, 0);
+                    Notification n = new Notification.Builder(context)
                             .setContentTitle("Hilltop alert")
                             .setContentText("Your vehicle is approaching")
                             .setSmallIcon(R.drawable.ic_stat_ic_notification)
@@ -208,12 +209,12 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
                             .setAutoCancel(true)
                             .addAction(R.drawable.ic_stat_ic_notification, "MARK TRIP AS COMPLETE", completeTripPendingIntent)
                             .build();
-                    notificationManager.notify(0,n);
+                    notificationManager.notify(0, n);
                 }
             } else {
                 System.out.println("Not displaying alert");
-                System.out.println("dist = "+dist);
-                System.out.println("pending = "+pending);
+                System.out.println("dist = " + dist);
+                System.out.println("pending = " + pending);
             }
 
             System.out.println(distInfo[0]);
@@ -259,7 +260,6 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
     };
 
 
-
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -276,11 +276,10 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
         System.out.println("provider is " + provider);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},REQUEST_FINE_LOC);
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_FINE_LOC);
         }
         moveToCurrentLocation();
     }
-
 
 
     @Override
@@ -344,6 +343,55 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    @Override
+    public void onLocationChanged(Location location) {
+        if (userLoc != null)
+            userLoc.remove();
+        LatLng myLocLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+        System.out.println("LAT LONG " + location.getLatitude() + "," + location.getLongitude());
+        userLoc = mMap.addMarker(new MarkerOptions().draggable(true).position(myLocLatLng));
+        mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+            @Override
+            public void onMarkerDragStart(Marker marker) {
+
+            }
+
+            @Override
+            public void onMarkerDrag(Marker marker) {
+
+            }
+
+            @Override
+            public void onMarkerDragEnd(Marker marker) {
+
+            }
+        });
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocLatLng));
+        CameraPosition cameraPosition = CameraPosition.builder()
+                .target(myLocLatLng)
+                .bearing(45)
+                .zoom(16f)
+                .build();
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition),
+                4000, null);
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+
+    }
+
     public static class TripCompleteActionReceiver extends BroadcastReceiver {
 
 
@@ -351,16 +399,16 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
         public void onReceive(Context context, Intent intent) {
             String act = "TRIP_COMPLETE_ACTION";
             System.out.println("on receive");
-            if(intent.getAction().equals(act)){
+            if (intent.getAction().equals(act)) {
                 System.out.println("mark my earliest approved request complete");
-                String URL = "http://hilltop-bradleyuniv.rhcloud.com/rest/markTripComplete/"+buid;
+                String URL = "http://hilltop-bradleyuniv.rhcloud.com/rest/markTripComplete/" + buid;
 
-                JsonObjectRequest req = new JsonObjectRequest(URL, new Response.Listener<JSONObject> () {
+                JsonObjectRequest req = new JsonObjectRequest(URL, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
                             VolleyLog.v("Response:%n %s", response.toString(4));
-                            Log.i("MarkTripComplete",response.getString("status"));
+                            Log.i("MarkTripComplete", response.getString("status"));
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -372,7 +420,7 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
                     }
                 });
                 mRequestQueue.add(req);
-                ((NotificationManager)context.getSystemService(NOTIFICATION_SERVICE)).cancel(0);
+                ((NotificationManager) context.getSystemService(NOTIFICATION_SERVICE)).cancel(0);
             }
 
 
@@ -395,12 +443,11 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
         if (provider == null) {
             //try to get GPS location provider
             provider = LocationManager.GPS_PROVIDER;
-            System.out.println("proivder after "+provider);
         }
         if (provider != null)
             myLocation = locationManager.getLastKnownLocation(provider);
         if (myLocation == null) {
-            Toast toast = Toast.makeText(this,"Could not get your location, defaulting to Bradley Univeristy location",Toast.LENGTH_LONG);
+            Toast toast = Toast.makeText(this, "Could not get your location, defaulting to Bradley Univeristy location", Toast.LENGTH_LONG);
             toast.show();
             myLocation = new Location("bradley");
             myLocation.setLatitude(40.6981432);
@@ -408,9 +455,9 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
         }
         if (userLoc != null)
             userLoc.remove();
-        previous = new LatLng(myLocation.getLatitude(),myLocation.getLongitude());
-        System.out.println("LAT LONG "+myLocation.getLatitude()+","+myLocation.getLongitude());
-        userLoc = mMap.addMarker(new MarkerOptions().draggable(true).position(previous));
+        LatLng myLocLatLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+        System.out.println("LAT LONG " + myLocation.getLatitude() + "," + myLocation.getLongitude());
+        userLoc = mMap.addMarker(new MarkerOptions().draggable(true).position(myLocLatLng));
         mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
             @Override
             public void onMarkerDragStart(Marker marker) {
@@ -428,9 +475,9 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(previous));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocLatLng));
         CameraPosition cameraPosition = CameraPosition.builder()
-                .target(previous)
+                .target(myLocLatLng)
                 .bearing(45)
                 .zoom(16f)
                 .build();
@@ -447,10 +494,10 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
         return distance;
     }
 
-    public Distance googleDistanceApi(final double lat1, final double lon1, final double lat2, final double lon2){
+    public Distance googleDistanceApi(final double lat1, final double lon1, final double lat2, final double lon2) {
         final Distance parsedDistance = new Distance();
         //no point for this thread, this has to be modified as a different thread that updates the distance from bg.s
-        Thread thread=new Thread(new Runnable() {
+        Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -490,9 +537,9 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void checkPendingRide(String id) {
-        String URL = "http://hilltop-bradleyuniv.rhcloud.com/rest/checkPending/"+id;
+        String URL = "http://hilltop-bradleyuniv.rhcloud.com/rest/checkPending/" + id;
 
-        JsonObjectRequest req = new JsonObjectRequest(URL, new Response.Listener<JSONObject> () {
+        JsonObjectRequest req = new JsonObjectRequest(URL, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 try {
@@ -524,7 +571,7 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
 
         Intent intent = new Intent(TrackVehicle.this, BookActivity.class);
         Bundle b = new Bundle();
-        b.putString(BUID,getIntent().getStringExtra("buid"));
+        b.putString(BUID, getIntent().getStringExtra("buid"));
         b.putDouble("lat", userLoc.getPosition().latitude);
         b.putDouble("lon", userLoc.getPosition().longitude);
         intent.putExtras(b);
@@ -533,9 +580,11 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
 
     class Distance {
         private String distance;
+
         public void setDistance(String distance) {
             this.distance = distance;
         }
+
         public String getDistance() {
             return distance;
         }

@@ -93,6 +93,7 @@ public class BookActivity extends AppCompatActivity {
                 params.put("num", num);
                 params.put("to", to);
                 params.put("from", from);
+                params.put("phone", phoneNumber);
 
 
                 JsonObjectRequest req = new JsonObjectRequest(URL, new JSONObject(params),
@@ -234,6 +235,9 @@ public class BookActivity extends AppCompatActivity {
         if (checkPhoneStatePermission()) {
            getPhoneNumber();
         }
+
+        Toast toast = Toast.makeText(this, "Note : Phone number is also sent along with the booking, BUPD might contact you for verification", Toast.LENGTH_LONG);
+        toast.show();
     }
 
     private class UpdateFromLocHandler extends Handler {
