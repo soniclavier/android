@@ -44,6 +44,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -107,9 +108,17 @@ public class BookActivity extends AppCompatActivity {
                                     VolleyLog.v("Response:%n %s", response.toString(4));
                                     System.out.println("Success " + response);
                                     String message = "Booking request sent";
-                                    message += "\nBooking ID : " + response.getString("booking_id");
-                                    message += "\nStatus : " + response.getString("approval_status");
-                                    openDialog(message, true);
+                                    if (response.getString("status").contains("success")) {
+                                        message += "\nBooking ID : " + response.getString("booking_id");
+                                        message += "\nStatus : " + response.getString("approval_status");
+                                        openDialog(message, true);
+                                    } else if (response.getString("status").contains("failed")) {
+                                        //only one type of failure can occur currently
+                                        openDialog(response.getString("status"), false);
+                                    } else {
+                                        openDialog(response.getString("\"Could not send booking request\\nPlease try again later\""),false);
+                                    }
+
                                 } catch (JSONException e) {
                                     e.printStackTrace();
                                 }
@@ -209,12 +218,17 @@ public class BookActivity extends AppCompatActivity {
             outside = true;
             findViewById(R.id.bookButton).setEnabled(false);
         }
+        if (!isWithinOpeartionHours()) {
+            Toast toast = Toast.makeText(this, "Hilltop cruiser operating hours is between 7.00PM and 3.00AM", Toast.LENGTH_LONG);
+            toast.show();
+            findViewById(R.id.bookButton).setEnabled(false);
+        }
 
 
         Switch takeCurrentLocation = (Switch) findViewById(R.id.switchBook);
         takeCurrentLocation.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (!outside)
+                if (!outside && isWithinOpeartionHours())
                     findViewById(R.id.bookButton).setEnabled(true);
                 else
                     findViewById(R.id.bookButton).setEnabled(false);
@@ -236,7 +250,8 @@ public class BookActivity extends AppCompatActivity {
                         findViewById(R.id.bookButton).setEnabled(false);
                     }
                 } else {
-                    findViewById(R.id.bookButton).setEnabled(true);
+                    if (isWithinOpeartionHours())
+                        findViewById(R.id.bookButton).setEnabled(true);
                     fromLoc.setText("");
                     fromLoc.setEnabled(true);
                 }
@@ -254,7 +269,7 @@ public class BookActivity extends AppCompatActivity {
            getPhoneNumber();
         }
 
-        Toast toast = Toast.makeText(this, "Note : Phone number is also sent along with the booking, BUPD might contact you for verification", Toast.LENGTH_LONG);
+        Toast toast = Toast.makeText(this, "Your phone number will also be sent along with the booking request, BUPD might contact you for verification", Toast.LENGTH_LONG);
         toast.show();
     }
 
@@ -414,6 +429,15 @@ public class BookActivity extends AppCompatActivity {
                 return true;
         }
         return true;
+    }
+
+    public boolean isWithinOpeartionHours() {
+        Calendar cal = Calendar.getInstance();
+        int hour = cal.get(Calendar.HOUR_OF_DAY);
+        if ((hour >= 19 && hour <= 24) || (hour >=0 && hour<=3))
+            return true;
+        else
+            return false;
 
     }
 }
