@@ -115,9 +115,9 @@ public class BookingStatus extends AppCompatActivity {
                 if (entry.getString("booking_status").equals("approved"))
                     statusCell.setTextColor(getResources().getColor(R.color.gossipGreen));
                 else if (entry.getString("booking_status").equals("rejected"))
-                    statusCell.setTextColor(getResources().getColor(R.color.smokeGrey));
-                else if (entry.getString("booking_status").equals("completed"))
-                    statusCell.setTextColor(getResources().getColor(R.color.smokeGrey));
+                    statusCell.setTextColor(getResources().getColor(R.color.lynch));
+                else if (entry.getString("booking_status").equals("complete"))
+                    statusCell.setTextColor(getResources().getColor(R.color.lynch));
                 else
                     statusCell.setTextColor(getResources().getColor(R.color.smokeGrey));
                 String bookingId = entry.getString("booking_id");
