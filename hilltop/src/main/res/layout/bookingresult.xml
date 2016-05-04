@@ -24,11 +24,13 @@
             android:text="Cancel"/>
 
         <Button
-            android:id="@+id/dialog_ok"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="0.50"
-            android:background="@color/gossipGreen"
-            android:text="Ok"/>
+        android:id="@+id/dialog_ok"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.50"
+        android:background="@color/gossipGreen"
+        android:text="Ok"/>
+
+
     </LinearLayout>
 </RelativeLayout>

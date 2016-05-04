@@ -1,6 +1,8 @@
 package com.example.vishnu.hilltop;
 
+import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -9,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AbsListView;
+import android.widget.Button;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -112,10 +115,25 @@ public class BookingStatus extends AppCompatActivity {
                 if (entry.getString("booking_status").equals("approved"))
                     statusCell.setTextColor(getResources().getColor(R.color.gossipGreen));
                 else if (entry.getString("booking_status").equals("rejected"))
-                    statusCell.setTextColor(getResources().getColor(R.color.brickred));
+                    statusCell.setTextColor(getResources().getColor(R.color.smokeGrey));
+                else if (entry.getString("booking_status").equals("completed"))
+                    statusCell.setTextColor(getResources().getColor(R.color.smokeGrey));
                 else
                     statusCell.setTextColor(getResources().getColor(R.color.smokeGrey));
-                idCell.setText(entry.getString("booking_id"));
+                String bookingId = entry.getString("booking_id");
+                idCell.setText(bookingId);
+                row.setId(Integer.parseInt(bookingId));
+                row.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick( View v ) {
+                        TableRow row = (TableRow)v;
+                        String status = ((TextView)row.getChildAt(1)).getText().toString();
+                        String id = ((TextView)row.getChildAt(0)).getText().toString();
+                        if (status.equals("waiting for approval") || status.equals("approved")) {
+                            openCancelDialog(id,status);
+                        }
+
+                    }});
                 statusCell.setText(entry.getString("booking_status"));
                 row.addView(idCell);
                 row.addView(statusCell);
@@ -143,4 +161,45 @@ public class BookingStatus extends AppCompatActivity {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
+
+    public void openCancelDialog(final String id,String status) {
+        final Dialog dialog = new Dialog(this); // Context, this, etc.
+        dialog.setContentView(R.layout.cancel_booking);
+        dialog.setTitle("Cancel booking");
+        TextView dialogText = (TextView) dialog.findViewById(R.id.dialog_info);
+        dialogText.setText("Would you like to cancel booking? \n ID: "+id+" \n Status : "+status);
+        dialog.findViewById(R.id.dialog_yes).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final String URL = "http://hilltop-bradleyuniv.rhcloud.com/rest/cancelBooking/"+id;
+                JsonObjectRequest req = new JsonObjectRequest(URL, new Response.Listener<JSONObject> () {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            VolleyLog.v("Response:%n %s", response.toString(4));
+                            retrieveBookings(buid);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        VolleyLog.e("Error: ", error.getMessage());
+                    }
+                });
+                mRequestQueue.add(req);
+                dialog.dismiss();
+            }
+        });
+
+        dialog.findViewById(R.id.dialog_no).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+    }
 }

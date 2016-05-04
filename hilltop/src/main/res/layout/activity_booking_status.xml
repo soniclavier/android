@@ -26,11 +26,11 @@
         android:layout_height="wrap_content"
         android:text="Refresh"
         android:id="@+id/refresh"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:onClick="refresh"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:layout_alignRight="@+id/statusTableLayout"
+        android:layout_alignEnd="@+id/statusTableLayout" />
 
 </RelativeLayout>
