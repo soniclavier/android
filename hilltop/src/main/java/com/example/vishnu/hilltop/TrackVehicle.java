@@ -189,6 +189,7 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
 
             if (dist != null && dist.contains("ft") && pending) {
                 double feet = Double.parseDouble(dist.substring(0, dist.indexOf(" ")));
+                System.out.println(feet);
                 if (feet < 300 && (lastNotification == 0 || (System.currentTimeMillis() - lastNotification > 0))) {
                     lastNotification = System.currentTimeMillis();
                     // use System.currentTimeMillis() to have a unique ID for the pending intent
@@ -570,13 +571,27 @@ public class TrackVehicle extends FragmentActivity implements OnMapReadyCallback
     public void loadBooking(View view) {
 
         Intent intent = new Intent(TrackVehicle.this, BookActivity.class);
+        String distance = "";
+
+        Location bradley = new Location("bradley");
+        bradley.setLatitude(40.6981432);
+        bradley.setLongitude(-89.6182068);
+
+        Location studentLoc = new Location("studentLoc");
+        studentLoc.setLatitude(userLoc.getPosition().latitude);
+        studentLoc.setLongitude(userLoc.getPosition().longitude);
+        distance = getDistance(bradley,studentLoc);
+
         Bundle b = new Bundle();
         b.putString(BUID, getIntent().getStringExtra("buid"));
         b.putDouble("lat", userLoc.getPosition().latitude);
         b.putDouble("lon", userLoc.getPosition().longitude);
+        b.putString("distance",distance);
         intent.putExtras(b);
         startActivity(intent);
     }
+
+
 
     class Distance {
         private String distance;

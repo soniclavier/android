@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -37,6 +38,7 @@ import com.android.volley.toolbox.DiskBasedCache;
 
 import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.google.android.gms.maps.model.Marker;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,6 +54,7 @@ public class BookActivity extends AppCompatActivity {
     private final int MY_PERMISSIONS_REQUEST_CALL_PHONE = 0;
     private final int MY_READ_PHONE_STATE = 1;
     private String phoneNumber = "Unknown";
+    public static boolean outside = false;
 
     public void sendBookReqest(View view) {
 
@@ -198,10 +201,24 @@ public class BookActivity extends AppCompatActivity {
             toast.show();
         }
 
+        String dist = getIntent().getStringExtra("distance");
+
+        if (!isWithinBoundary(dist)) {
+            Toast toast = Toast.makeText(this, "It looks like you are outside the coverage of Hilltop Cruiser Service. If you feel otherwise please book through the Call option provided", Toast.LENGTH_LONG);
+            toast.show();
+            outside = true;
+            findViewById(R.id.bookButton).setEnabled(false);
+        }
+
+
         Switch takeCurrentLocation = (Switch) findViewById(R.id.switchBook);
         takeCurrentLocation.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                findViewById(R.id.bookButton).setEnabled(true);
+                if (!outside)
+                    findViewById(R.id.bookButton).setEnabled(true);
+                else
+                    findViewById(R.id.bookButton).setEnabled(false);
+
                 EditText fromLoc = (EditText) findViewById(R.id.fromLoc);
                 if (isChecked) {
                     fromLoc.setText("");
@@ -219,6 +236,7 @@ public class BookActivity extends AppCompatActivity {
                         findViewById(R.id.bookButton).setEnabled(false);
                     }
                 } else {
+                    findViewById(R.id.bookButton).setEnabled(true);
                     fromLoc.setText("");
                     fromLoc.setEnabled(true);
                 }
@@ -382,5 +400,20 @@ public class BookActivity extends AppCompatActivity {
         String mPhoneNumber = tMgr.getLine1Number();
         if (mPhoneNumber != null && !mPhoneNumber.trim().equals("") && !mPhoneNumber.contains("?"))
             phoneNumber =  mPhoneNumber;
+    }
+
+    public boolean isWithinBoundary(String dist) {
+        System.out.println(dist);
+        if (dist.contains("ft"))
+            return true;
+        if (dist.contains("mi")) {
+            float distFloat = Float.parseFloat(dist.split(" ")[0]);
+            if (distFloat > 1.20)
+                return false;
+            else
+                return true;
+        }
+        return true;
+
     }
 }
