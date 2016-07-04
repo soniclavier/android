@@ -30,4 +30,5 @@ git commit                   //after this command, you have to write a descripti
 git push                     //this will push the changes on to github server
 ```
 
-
+## Architecture
+![flow diagram](flow.png)
