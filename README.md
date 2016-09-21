@@ -1,6 +1,8 @@
 # project repository for hilltop vehicle tracking android app
 An application for Bradley University hilltop saftey cruiser - booking and tracking.
 
+[PPT](http://www.slideshare.net/VishnuViswanath/bucruiser-ppt-66265414)
+
 ## Architecture
 ![flow diagram](flow.png)
 
